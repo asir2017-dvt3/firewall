@@ -10,11 +10,11 @@ start)
 	iptables -F OUTPUT
 	iptables -F INPUT
 	iptables -F FORWARD
-	iptables -A FORWARD -o $WAN_IFACE -j ACCEPT
-	iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE 
 	iptables -P INPUT DROP
 	iptables -P FORWARD DROP
 	iptables -P OUTPUT DROP
+	iptables -A FORWARD -o $WAN_IFACE -j ACCEPT
+	iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE 
 	iptables -A FORWARD -p tcp -s LAN -d DMZ -j ACCEPT
 	iptables -A FORWARD -o eth0 -p tcp -s LAN -j ACCEPT
 	iptables -A FORWARD -s DMZ -d LAN -p icmp -j ACCEPT
