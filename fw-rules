@@ -1,4 +1,3 @@
-
 #!/bin/sh
 #constantes
 WAN_IFACE="WAN"
