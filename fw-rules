@@ -1,7 +1,9 @@
 #!/bin/sh
 #constantes
-WAN_IFACE="WAN"
+WAN_IFACE="eth0"
 LAN_IFACE="LAN"
+LAN_NET="192.168.108.0/24"
+DMZ_NET="172.20.108.0/24"
 DMZ_IFACE="DMZ"
 HTTPS_PORT="443"
 HTTP_PORT="80"
@@ -20,29 +22,31 @@ start)
         iptables -P OUTPUT DROP
 	iptables -A FORWARD -o $WAN_IFACE -j ACCEPT
 	iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE 
-	iptables -A FORWARD -p tcp -s $LAN_IFACE -d $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -o $WAN_IFACE -p tcp -s $LAN_IFACE -j ACCEPT
-	iptables -A FORWARD -s $DMZ_IFACE -d $LAN_IFACE -p icmp -j ACCEPT
-	iptables -A FORWARD -p tcp --dport $HTTP_PORT -s $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -p tcp --dport $HTTPS_PORT -s $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -p tcp --sport $HTTP_PORT -d $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -p tcp --sport $HTTPS_PORT -d $DMZ_IFACE -j ACCEPT
-	iptables -A OUTPUT -p tcp --dport $HTTP_PORT -s DMZ_IFACE -j ACCEPT
-	iptables -A OUTPUT -p tcp --dport $HTTPS_PORT -s $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -p icmp -s $DMZ_IFACE -j ACCEPT
-	iptables -A OUTPUT -p icmp -s $DMZ_IFACE -j ACCEPT
-	iptables -A FORWARD -p udp --dport $DNS_PORT -s DMZ -j ACCEPT
-	iptables -A FORWARD -p udp --sport $DNS_PORT -d $DMZ_IFACE -j ACCEPT
-	iptables -A OUTPUT -p udp --dport $DNS_PORT -s $DMZ_IFACE -j ACCEPT
-	iptables -A INPUT -p tcp --dport $SSH_PORT -s $LAN_IFACE -j ACCEPT
-	iptables -A INPUT -p tcp --dport $SSH_PORT -s $DMZ_IFACE -j ACCEPT
-	iptables -A OUTPUT -p tcp --sport $SSH_PORT -d $DMZ_IFACE -j ACCEPT
-	iptalbes -A OUTPUT -p tcp --sport $SSH_PORT -d $LAN_IFACE -j ACCEPT
+	iptables -A FORWARD -p tcp -s $LAN_NET -d $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -o $WAN_IFACE -p tcp -s $LAN_NET -j ACCEPT
+	iptables -A FORWARD -s $DMZ_NET -d $LAN_NET -p icmp -j ACCEPT
+	iptables -A FORWARD -p tcp --dport $HTTP_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -p tcp --dport $HTTPS_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -p tcp --sport $HTTP_PORT -d $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -p tcp --sport $HTTPS_PORT -d $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p tcp --dport $HTTP_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p tcp --dport $HTTPS_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -p icmp -s $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p icmp -s $DMZ_NET -j ACCEPT
+	iptables -A FORWARD -p udp --dport $DNS_PORT -s $LAN_NET -j ACCEPT
+	iptables -A FORWARD -p udp --sport $DNS_PORT -d $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p udp --dport $DNS_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A INPUT -p tcp --dport $SSH_PORT -s $LAN_NET -j ACCEPT
+	iptables -A INPUT -p tcp --dport $SSH_PORT -s $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p tcp --sport $SSH_PORT -d $DMZ_NET -j ACCEPT
+	iptables -A OUTPUT -p tcp --sport $SSH_PORT -d $LAN_NET -j ACCEPT
 	iptables -t nat -A POSTROUTING -o $WAN_IFACE -j MASQUERADE
 	iptables -t nat -A POSTROUTING -o $DMZ_IFACE -j MASQUERADE
 	iptables -t nat -A PREROUTING -i $WAN_IFACE -p tcp --dport $SSH_PORT --j DNAT --to-destination 172.20.108.100:22
 	iptables -A FORWARD -p tcp -i $WAN_IFACE -d 172.20.108.100 --dport $SSH_PORT -j ACCEPT
-	;;
+	iptables -A INPUT -p tcp --dport 2222 -i $WAN_IFACE -j ACCEPT
+	iptables -A OUTPUT -p tcp --sport 2222 -o $WAN_IFACE -j ACCEPT
+;;
 stop)
         echo "Stopping fw-rules"
         iptables -t nat -F POSTROUTING
