@@ -29,12 +29,6 @@ WAN_IP="10.3.4.166"
 LAN_IP="192.168.108.254"
 
 
-CFG_FILE="/etc/default/fw-rules"
-
-
-STATUS_FILE="/var/run/fw-rules"
-
-
 case $1 in
 
 "start")
@@ -122,7 +116,6 @@ case $1 in
 
 "stop")
 
-	rm -f "$STATUS_FILE"
 
 	iptables -F
 	iptables -t nat -F
@@ -142,18 +135,8 @@ case $1 in
 
 	;;
 
-"status")
-
-	if [ -r "$STATUS_FILE" ]; then
-
-		cat "$STATUS_FILE"
-	else
-		echo "fw-rules service stopped"
-
-	fi
-	;;
 *)
-	echo "Se necesita un parametro valido [start | stop]"
+	echo "Correct parameter needed [start | stop]"
 
 	exit 1
 
