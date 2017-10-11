@@ -50,11 +50,11 @@ case $1 in
 	iptables -P OUTPUT DROP
 	iptables -P FORWARD DROP
 
-	iptables -A INPUT -i $WAN_IF -d $WAN_IP -p tcp --dport 2222 -j ACCEPT
-	iptables -A INPUT -i $LAN_IF -s $LAN_NET -d $LAN_IP -p tcp --dport 2222 -j ACCEPT
-	iptables -A INPUT -i $DMZ_IF -s $DMZ_NET -d $DMZ_IP  -p tcp --dport 2222 -j ACCEPT
+	iptables -A INPUT -i $WAN_IFACE -d $WAN_IP -p tcp --dport 2222 -j ACCEPT
+	iptables -A INPUT -i $LAN_IFACE -s $LAN_NET -d $LAN_IP -p tcp --dport 2222 -j ACCEPT
+	iptables -A INPUT -i $DMZ_IFACE -s $DMZ_NET -d $DMZ_IP  -p tcp --dport 2222 -j ACCEPT
 	iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-	iptables -A OUTPUT -o $WAN_IF -p udp --dport 67 --sport 68 -j ACCEPT
+	iptables -A OUTPUT -o $WAN_IFACE -p udp --dport 67 --sport 68 -j ACCEPT
 
 
 	iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
@@ -70,45 +70,45 @@ case $1 in
 
 	iptables -A OUTPUT -p tcp --dport 22 -j ACCEPT
 
-	iptables -A FORWARD -i $DMZ_IF -s $DMZ_NET -o $WAN_IF -p udp --dport 53 -j ACCEPT
-	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IF -p udp --dport 53 -j SNAT --to $WAN_IP
+	iptables -A FORWARD -i $DMZ_IFACE -s $DMZ_NET -o $WAN_IFACE -p udp --dport 53 -j ACCEPT
+	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IFACE -p udp --dport 53 -j SNAT --to $WAN_IP
 
-	iptables -A FORWARD -i $DMZ_IF -s $DMZ_NET -o $WAN_IF -p tcp --dport 80 -j ACCEPT
+	iptables -A FORWARD -i $DMZ_IFACE -s $DMZ_NET -o $WAN_IFACE -p tcp --dport 80 -j ACCEPT
 
-	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IF -p tcp --dport 80 -j SNAT --to $WAN_IP
+	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IFACE -p tcp --dport 80 -j SNAT --to $WAN_IP
 
-	iptables -A FORWARD -i $DMZ_IF -s $DMZ_NET -o $WAN_IF -p tcp --dport 443 -j ACCEPT
+	iptables -A FORWARD -i $DMZ_IFACE -s $DMZ_NET -o $WAN_IFACE -p tcp --dport 443 -j ACCEPT
 
-	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IF -p tcp --dport 443 -j SNAT --to $WAN_IP
+	iptables -t nat -A POSTROUTING -s $DMZ_NET -o $WAN_IFACE -p tcp --dport 443 -j SNAT --to $WAN_IP
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $DMZ_IF -d $DMZ_NET -p tcp --dport 22 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $DMZ_IFACE -d $DMZ_NET -p tcp --dport 22 -j ACCEPT
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $DMZ_IF -d $DMZ_NET -p udp --dport 53 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $DMZ_IFACE -d $DMZ_NET -p udp --dport 53 -j ACCEPT
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $DMZ_IF -d $DMZ_NET -p tcp --dport 80 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $DMZ_IFACE -d $DMZ_NET -p tcp --dport 80 -j ACCEPT
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $DMZ_IF -d $DMZ_NET -p tcp --dport 443 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $DMZ_IFACE -d $DMZ_NET -p tcp --dport 443 -j ACCEPT
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $WAN_IF -p tcp --dport 80 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $WAN_IFACE -p tcp --dport 80 -j ACCEPT
 
-	iptables -t nat -A POSTROUTING -s $LAN_NET -o $WAN_IF -p tcp --dport 443 -j SNAT --to $WAN_IP
+	iptables -t nat -A POSTROUTING -s $LAN_NET -o $WAN_IFACE -p tcp --dport 443 -j SNAT --to $WAN_IP
 
-	iptables -A FORWARD -i $LAN_IF -s $LAN_NET -o $WAN_IF -p tcp --dport 443 -j ACCEPT
+	iptables -A FORWARD -i $LAN_IFACE -s $LAN_NET -o $WAN_IFACE -p tcp --dport 443 -j ACCEPT
 
-	iptables -t nat -A POSTROUTING -s $LAN_NET -o $WAN_IF -p tcp --dport 443 -j SNAT --to $WAN_IP
+	iptables -t nat -A POSTROUTING -s $LAN_NET -o $WAN_IFACE -p tcp --dport 443 -j SNAT --to $WAN_IP
 
 	iptables -A FORWARD -p icmp -j ACCEPT
-	iptables -t nat -A POSTROUTING -o $WAN_IF -p icmp  -j SNAT --to $WAN_IP
+	iptables -t nat -A POSTROUTING -o $WAN_IFACE -p icmp  -j SNAT --to $WAN_IP
 
-	iptables -t nat -A PREROUTING -i $WAN_IF -p tcp --dport 53 -j DNAT --to 172.20.100.22
-	iptables -t nat -A PREROUTING -i $WAN_IF -p udp --dport 53 -j DNAT --to 172.20.100.22
-	iptables -A FORWARD -i $WAN_IF -o $DMZ_IF -p tcp --dport 53 -d 172.20.100.22 -j ACCEPT
+	iptables -t nat -A PREROUTING -i $WAN_IFACE -p tcp --dport 53 -j DNAT --to 172.20.100.22
+	iptables -t nat -A PREROUTING -i $WAN_IFACE -p udp --dport 53 -j DNAT --to 172.20.100.22
+	iptables -A FORWARD -i $WAN_IFACE -o $DMZ_IFACE -p tcp --dport 53 -d 172.20.100.22 -j ACCEPT
 
-	iptables -t nat -A PREROUTING -i $WAN_IF -p tcp --dport 80 -j DNAT --to 172.20.100.22
-	iptables -A FORWARD -i $WAN_IF -o $DMZ_IF -p tcp --dport 80 -d 172.20.100.22 -j ACCEPT
+	iptables -t nat -A PREROUTING -i $WAN_IFACE -p tcp --dport 80 -j DNAT --to 172.20.100.22
+	iptables -A FORWARD -i $WAN_IFACE -o $DMZ_IFACE -p tcp --dport 80 -d 172.20.100.22 -j ACCEPT
 
-	iptables -t nat -A PREROUTING -i $WAN_IF -p tcp --dport 22 -j DNAT --to 172.20.100.22
-	iptables -A FORWARD -i $WAN_IF -o $DMZ_IF -p tcp --dport 22 -d 172.20.100.22 -j ACCEPT
+	iptables -t nat -A PREROUTING -i $WAN_IFACE -p tcp --dport 22 -j DNAT --to 172.20.100.22
+	iptables -A FORWARD -i $WAN_IFACE -o $DMZ_IFACE -p tcp --dport 22 -d 172.20.100.22 -j ACCEPT
 
  	iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 
